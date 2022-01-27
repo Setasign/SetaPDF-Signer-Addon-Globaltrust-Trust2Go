@@ -1,0 +1,1 @@
+# setapdf-signer-addon-globaltrust-trust2go
