@@ -15,32 +15,32 @@ class Client
     /**
      * @var ClientInterface
      */
-    private $httpClient;
+    protected $httpClient;
 
     /**
      * @var RequestFactoryInterface
      */
-    private $requestFactory;
+    protected $requestFactory;
 
     /**
      * @var StreamFactoryInterface
      */
-    private $streamFactory;
+    protected $streamFactory;
 
     /**
      * @var string
      */
-    private $apiUrl;
+    protected $apiUrl;
 
     /**
      * @var string
      */
-    private $username;
+    protected $username;
 
     /**
      * @var string
      */
-    private $transportPin;
+    protected $transportPin;
 
     public function __construct(
         ClientInterface $httpClient,

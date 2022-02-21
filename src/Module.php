@@ -26,22 +26,22 @@ class Module implements
     /**
      * @var Client
      */
-    private $client;
+    protected $client;
 
     /**
      * @var string
      */
-    private $requestId;
+    protected $requestId;
 
     /**
      * @var SetaPDF_Signer_Signature_Module_Pades
      */
-    private $padesModule;
+    protected $padesModule;
 
     /**
      * @var null|string
      */
-    private $certificateSerialNumber;
+    protected $certificateSerialNumber;
 
     /**
      * @param Client $client
