@@ -128,22 +128,9 @@ class Module implements
     public function createSignature(SetaPDF_Core_Reader_FilePath $tmpPath): string
     {
         if ($this->padesModule->getCertificate() === null) {
-            $certificates = $this->client->getCertificates()[0];
-            $mainCertificate = \array_filter($certificates, function ($certificate) {
-                return $certificate['certificateSerialNumber'] === $this->certificateSerialNumber;
-            })[0] ?? null;
-            if ($mainCertificate === null) {
-                throw new Exception('Certificate not found.');
-            }
-
-            $extraCertificates = \array_filter($certificates, function ($certificate) {
-                return $certificate['level'] !== 'USER';
-            });
-
-            $this->padesModule->setCertificate($mainCertificate['certificateString']);
-            $this->padesModule->setExtraCertificates(\array_map(function ($certificate) {
-                return $certificate['certificateString'];
-            }, $extraCertificates));
+            $certificates = $this->client->getCertificatesBySerialNumber($this->certificateSerialNumber);
+            $this->padesModule->setCertificate($certificates['certificate']);
+            $this->padesModule->setExtraCertificates($certificates['chain']);
         }
 
         $digest = $this->padesModule->getDigest();
