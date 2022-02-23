@@ -47,7 +47,7 @@ $client = new Client(
     $streamFactory,
     $apiUrl,
     $settings['username'],
-    $settings['transportPin']
+    $settings['activationPin']
 );
 //var_dump($client->getCertificates());die();
 

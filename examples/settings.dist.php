@@ -2,6 +2,6 @@
 
 return [
     'username' => 'your-username',
-    'transportPin' => 'your-transport-pin',
+    'activationPin' => 'your-activation-pin',
     'certificateSerialNumber' => 'your-certificate-serial-number',
 ];
