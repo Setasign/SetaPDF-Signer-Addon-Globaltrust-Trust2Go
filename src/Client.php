@@ -174,8 +174,6 @@ class Client
                 // allowed "sha224, sha256, sha384, sha512, sha3-224, sha3-256, sha3-384, sha3-512, ripemd128, ripemd160, ripemd256"
                 "hashAlgorithm" => $hashAlgorithm,
                 "hashes" => [$hash],
-                "singleSignature" => true,
-                "batchSignature" => false,
             ])))
         );
         $responseBody = $response->getBody()->getContents();

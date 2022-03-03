@@ -1,0 +1,321 @@
+<!DOCTYPE>
+<html lang="en">
+    <head>
+        <title>Trust2Go SetaPDF Example</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert@2.1.2/dist/sweetalert.min.js"></script>
+    </head>
+    <body>
+        <div style="width: 1400px; margin: auto;">
+            <h1 class="title is-1">Trust2Go SetaPDF Example</h1>
+            <div class="content">
+                <p>
+                    This demo demonstrates the usage of the trust2go API together with SetaPDF for qualified signatures.
+                    The server side will never get in touch with the username or the activation pin for security reasons.
+                </p>
+            </div>
+            <div class="columns">
+                <div class="column is-three-quarters">
+                    <iframe src="controller.php?action=preview" width="100%" height="600px"></iframe>
+                </div>
+                <div class="column" id="progress" style="display: none">
+                    <h2 class="title is-2">Loading...</h2>
+                    <progress class="progress is-small is-primary" max="100"></progress>
+                </div>
+                <div class="column" id="login">
+                    <h2 class="title is-2">Login</h2>
+                    <div class="field">
+                        <label for="username" class="label">Username</label>
+                        <input name="username" id="username" type="text" class="input" value=""/>
+                    </div>
+                    <div class="field">
+                        <label for="activationPin" class="label">Activation PIN</label>
+                        <input name="activationPin" id="activationPin" type="password" class="input" value=""/>
+                    </div>
+                    <button id="loginButton" class="button is-primary">Login</button>
+                </div>
+                <div class="column" id="selectCertificate" style="display: none">
+                    <h2 class="title is-2">Select certificate</h2>
+                    <div class="field">
+                        <label for="certificate" class="label">Certificate</label>
+                        <div class="select is-fullwidth">
+                            <select name="certificate" id="certificate">
+                            </select>
+                        </div>
+                    </div>
+                    <button id="signButton" class="button is-primary">Sign</button>
+                    <button id="cancelSignButton" class="button is-danger is-outlined">Cancel</button>
+                </div>
+                <div class="column" id="progressSigning" style="display: none">
+                    <h2 class="title is-2">Signing...</h2>
+                    <progress class="progress is-small is-primary" max="100"></progress>
+                    <h3 id="appConfirmation" class="title is-3" style="display:none;">Waiting for app confirmation (request id <span id="appConfirmationRequestId">&nbsp;</span>)...</h3>
+                    <div id="smsConfirmation">
+                        <h3 class="title is-3">SMS Confirmation required (request id <span id="smsConfirmationRequestId">&nbsp;</span>)</h3>
+                        <div class="field">
+                            <label for="smsConfirmationTan" class="label">TAN</label>
+                            <input name="tan" id="smsConfirmationTan" type="text" class="input" value=""/>
+                        </div>
+                        <button id="confirmSmsButton" class="button is-primary">Confirm</button>
+                        <button id="cancelSmsButton" class="button is-primary is-outlined">Cancel</button>
+                    </div>
+                </div>
+                <div class="column" id="completedSigning" style="display: none;">
+                    <h2 class="title is-2">Signing completed</h2>
+                    <a href="" id="downloadLink" class="button is-primary">Download</a>
+                    <button id="resetButton" class="button is-danger is-outlined">Restart</button>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+function ready(fn) {
+    if (document.readyState != 'loading'){
+        fn();
+    } else {
+        document.addEventListener('DOMContentLoaded', fn);
+    }
+}
+
+function makeid (length) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+    for (let i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+
+    return result;
+}
+
+function asyncSendRequest (request, data) {
+    let promise = new Promise(function (resolve, reject) {
+        request.onerror = function() {
+            reject('Connection error');
+        };
+
+        request.onload = function() {
+            if (this.status === 200) {
+                resolve(JSON.parse(this.response));
+            } else {
+                reject('Error (Status Code ' + this.status + '): ' + this.response);
+            }
+        }
+    });
+    request.send(data);
+    return promise;
+}
+
+ready(function () {
+    const apiUrl = 'https://t2gtest.globaltrust.eu/trust2go',
+        progressContainer = document.getElementById('progress'),
+        progressSigningContainer = document.getElementById('progressSigning'),
+        loginContainer = document.getElementById('login'),
+        selectCertificateContainer = document.getElementById('selectCertificate'),
+        completedSigningContainer = document.getElementById('completedSigning'),
+        certificateSelect = document.getElementById('certificate');
+
+    var certificates = null,
+        requestId = makeid(6);
+
+    document.getElementById('loginButton').addEventListener('click', async function (e) {
+        e.preventDefault();
+        loginContainer.style.display = 'none';
+        progressContainer.style.display = '';
+
+        var request = new XMLHttpRequest();
+        request.open('GET', apiUrl + '/api/v1/signers/usernames/certificates?language=EN&activeonly=true', true);
+        request.setRequestHeader('Authorization', 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('activationPin').value));
+        try {
+            certificates = await asyncSendRequest(request);
+        } catch (error) {
+            progressContainer.style.display = 'none';
+            loginContainer.style.display = '';
+            swal('Error', error, 'error');
+            return;
+        }
+
+        var certificatesHtml = '';
+        certificates.forEach(function (certificateChain) {
+            certificateChain.forEach(function (certificate) {
+                if (certificate.level !== 'USER') {
+                    return;
+                }
+
+                certificatesHtml += '<option value="' + certificate.certificateSerialNumber + '">' + certificate.description + '</option>';
+            });
+        });
+        certificateSelect.innerHTML = certificatesHtml;
+
+        progressContainer.style.display = 'none';
+        selectCertificateContainer.style.display = '';
+    }, false);
+
+    document.getElementById('cancelSignButton').addEventListener('click', function (e) {
+        e.preventDefault();
+        selectCertificateContainer.style.display = 'none';
+        loginContainer.style.display = '';
+        requestId = makeid(6);
+    }, false);
+
+    document.getElementById('resetButton').addEventListener('click', function (e) {
+        e.preventDefault();
+        completedSigningContainer.style.display = 'none';
+        loginContainer.style.display = '';
+        requestId = makeid(6);
+    }, false);
+
+    document.getElementById('signButton').addEventListener('click', async function (e) {
+        e.preventDefault();
+        selectCertificateContainer.style.display = 'none';
+        progressContainer.style.display = '';
+
+        var selectedCertificate = null,
+            selectedCertificateChain = null;
+        certificates.forEach(function (certificateChain) {
+            certificateChain.forEach(function (certificate) {
+                if (certificateSelect.value === certificate.certificateSerialNumber) {
+                    selectedCertificate = certificate;
+                    return false;
+                }
+            });
+            if (selectedCertificate !== null) {
+                selectedCertificateChain = certificateChain.filter(function (certificate) {
+                    return certificate.level !== 'USER';
+                });
+                return false;
+            }
+        });
+
+        var startRequest = new XMLHttpRequest();
+        startRequest.open('POST', 'controller.php?action=start', true);
+        startRequest.setRequestHeader('Content-Type', 'application/json');
+
+        try {
+            var startResult = await asyncSendRequest(startRequest, JSON.stringify({
+                certificate: selectedCertificate.certificateString,
+                extraCertificates: selectedCertificateChain.map(function (certificate) {
+                    return certificate.certificateString;
+                })
+            }));
+        } catch (error) {
+            swal('Error', error, 'error');
+            progressContainer.style.display = 'none';
+            selectCertificateContainer.style.display = '';
+        }
+
+        var hashToSign = startResult.dataToSign;
+
+        var appConfirmation = document.getElementById('appConfirmation')
+        var smsConfirmation = document.getElementById('smsConfirmation')
+
+        progressContainer.style.display = 'none';
+        progressSigningContainer.style.display = '';
+
+        appConfirmation.style.display = 'none';
+        smsConfirmation.style.display = 'none';
+
+        if (selectedCertificate.sms2FA) {
+            smsConfirmation.style.display = '';
+            document.getElementById('smsConfirmationRequestId').innerHTML = requestId;
+        } else if (selectedCertificate.force2FA) {
+            appConfirmation.style.display = '';
+            document.getElementById('appConfirmationRequestId').innerHTML = requestId;
+        }
+
+        var signRequest = new XMLHttpRequest();
+        signRequest.open('POST', apiUrl + '/api/v1/signers/usernames/sign', true);
+        signRequest.setRequestHeader('Authorization', 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('activationPin').value));
+        signRequest.setRequestHeader('Content-Type', 'application/json');
+        try {
+            var signResponse = await asyncSendRequest(signRequest, JSON.stringify({
+                language: 'EN',
+                requestId: requestId,
+                certificateSerialNumber: selectedCertificate.certificateSerialNumber,
+                hashes: [hashToSign],
+                hashAlgorithm: 'sha256'
+            }));
+        } catch (error) {
+            swal('Error', error, 'error');
+            progressSigningContainer.style.display = 'none';
+            selectCertificateContainer.style.display = '';
+        }
+
+        if (signResponse.requestId !== requestId) {
+            swal('Error', 'Invalid requestId', 'error');
+            progressSigningContainer.style.display = 'none';
+            selectCertificateContainer.style.display = '';
+            return;
+        }
+        var signedHash = null;
+        signResponse.signedHashes.forEach(function (hash) {
+            if (hash.hash === hashToSign) {
+                signedHash = hash.signedHash;
+                return false;
+            }
+        });
+        if (signedHash === null) {
+            swal('Error', 'Missing hash', 'error');
+            progressSigningContainer.style.display = 'none';
+            selectCertificateContainer.style.display = '';
+            return;
+        }
+
+        var finishRequest = new XMLHttpRequest();
+        finishRequest.open('POST', 'controller.php?action=sign', true);
+        finishRequest.setRequestHeader('Content-Type', 'application/json');
+
+        try {
+            var finishResponse = await asyncSendRequest(finishRequest, JSON.stringify({
+                signature: signedHash
+            }));
+        } catch (error) {
+            swal('Error', error, 'error');
+            progressSigningContainer.style.display = 'none';
+            selectCertificateContainer.style.display = '';
+            return;
+        }
+
+        document.getElementById('downloadLink').href = 'controller.php?action=download&id=' + finishResponse.id;
+        progressSigningContainer.style.display = 'none';
+        completedSigningContainer.style.display = '';
+    });
+
+    document.getElementById('confirmSmsButton').addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        var request = new XMLHttpRequest();
+        request.open('POST', apiUrl + '/api/v1/signers/signrequests/confirm/json', true);
+        request.setRequestHeader('Authorization', 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('activationPin').value));
+        request.setRequestHeader('Content-Type', 'application/json');
+        try {
+            await asyncSendRequest(request, JSON.stringify({
+                language: 'EN',
+                requestId: requestId,
+                tan: document.getElementById('smsConfirmationTan').value
+            }));
+        } catch (error) {
+            swal('Error', error, 'error');
+        }
+    });
+
+    document.getElementById('cancelSmsButton').addEventListener('click', async function (e) {
+        e.preventDefault();
+
+        var request = new XMLHttpRequest();
+        request.open('POST', apiUrl + '/api/v1/signers/signrequests/cancel/json', true);
+        request.setRequestHeader('Authorization', 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('activationPin').value));
+        request.setRequestHeader('Content-Type', 'application/json');
+
+        try {
+            await asyncSendRequest(request, JSON.stringify({
+                language: 'EN',
+                requestId: requestId
+            }));
+        } catch (error) {
+            swal('Error', error, 'error');
+        }
+    });
+});
+        </script>
+    </body>
+</html>
