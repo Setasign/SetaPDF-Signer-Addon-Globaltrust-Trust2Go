@@ -31,8 +31,7 @@ $httpClient = new GuzzleClient([
     'handler' => new CurlHandler(),
     // note: guzzle requires this parameter to fully support PSR-18
     'http_errors' => false,
-
-    'verify' => false,
+    'verify' => __DIR__ . '/files/globaltrust-eu-cert-chain.pem',
     // timeout by api after ~300 seconds
     'timeout' => 360,
 ]);
@@ -55,7 +54,7 @@ $module = new Module($client, $requestId, $certificateSerialNumber);
 $module->setDigest(SetaPDF_Signer_Digest::SHA_512);
 
 $reader = new SetaPDF_Core_Reader_File($file);
-$writer = new SetaPDF_Core_Writer_File(__DIR__ . '/files/signed.pdf');
+$writer = new SetaPDF_Core_Writer_File(__DIR__ . '/signed.pdf');
 // let's get the document
 $document = SetaPDF_Core_Document::load($reader, $writer);
 
@@ -65,11 +64,10 @@ $signer->setAllowSignatureContentLengthChange(false);
 //$signer->setSignatureContentLength(36000);
 
 //// set some signature properties
-////$signer->setLocation($_SERVER['SERVER_NAME']);
-//$signer->setContactInfo('+01 2345 67890123');
-//$signer->setReason('Testing eid easy');
-//
-//$field = $signer->getSignatureField();
-//$signer->setSignatureFieldName($field->getQualifiedName());
+$signer->setLocation($_SERVER['SERVER_NAME']);
+$signer->setReason('Testing TRUST2GO');
+
+$field = $signer->getSignatureField();
+$signer->setSignatureFieldName($field->getQualifiedName());
 
 $signer->sign($module);
