@@ -296,7 +296,8 @@ ready(function () {
                 tan: document.getElementById('smsConfirmationTan').value
             }));
         } catch (error) {
-            swal('Error', error, 'error');
+            // the error will be handled by the /sign response
+            // swal('Error', error.errorMessage, 'error');
         }
     });
 
