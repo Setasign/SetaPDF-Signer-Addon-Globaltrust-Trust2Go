@@ -64,7 +64,8 @@ class Module implements
                 SetaPDF_Signer_Digest::SHA_256,
                 SetaPDF_Signer_Digest::SHA_384,
                 SetaPDF_Signer_Digest::SHA_512
-            ]
+            ],
+            true
         )) {
             throw new InvalidArgumentException('Invalid digest.');
         }
