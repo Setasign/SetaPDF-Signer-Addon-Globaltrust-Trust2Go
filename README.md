@@ -56,15 +56,15 @@ and execute `composer update`. You need to define the `repository` to evaluate t
 [SetaPDF-Signer](https://www.setasign.com/signer) component
 (see [here](https://getcomposer.org/doc/faqs/why-can%27t-composer-load-repositories-recursively.md) for more details).
 
-### Evaluation version
+### Trial version
 
 By default, this packages depends on a licensed version of the [SetaPDF-Signer](https://www.setasign.com/signer)
-component. If you want to use it with an evaluation version please use following in your composer.json:
+component. If you want to use it with a trial version please use following in your composer.json:
 
 ```json
 {
     "require": {
-        "setasign/setapdf-signer-addon-globaltrust-trust2go": "dev-evaluation"
+        "setasign/setapdf-signer-addon-globaltrust-trust2go": "dev-trial"
     },
     "repositories": [
         {
