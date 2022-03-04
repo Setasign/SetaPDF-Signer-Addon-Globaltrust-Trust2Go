@@ -1,7 +1,7 @@
 # TRUST2GO signature module for the SetaPDF-Signer component
 
 This package offers an individual module for the [SetaPDF-Signer Component](https://www.setasign.com/signer) that allows
-you to use [TRUST2GO](https://trustservices.swisscom.com/signing-service/)
+you to use [TRUST2GO](https://globaltrust.eu/produkte/trust2go/)
 for the signature process of PDF documents. A big advantage of this module is, that it only transfers the hash which
 shall be signed by TRUST2GO and not the complete PDF document. The returned signature will be placed in
 the PDF document by the SetaPDF-Signer Component.
