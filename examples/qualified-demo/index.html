@@ -97,7 +97,12 @@ function asyncSendRequest (request, data) {
 
         request.onload = function() {
             if (this.status === 200) {
-                resolve(JSON.parse(this.response));
+                if (this.response !== '') {
+                    resolve(JSON.parse(this.response));
+                } else {
+                    resolve(null);
+                }
+
             } else {
                 reject('Error (Status Code ' + this.status + '): ' + this.response);
             }
@@ -207,8 +212,8 @@ ready(function () {
 
         var hashToSign = startResult.dataToSign;
 
-        var appConfirmation = document.getElementById('appConfirmation')
-        var smsConfirmation = document.getElementById('smsConfirmation')
+        var appConfirmation = document.getElementById('appConfirmation');
+        var smsConfirmation = document.getElementById('smsConfirmation');
 
         progressContainer.style.display = 'none';
         progressSigningContainer.style.display = '';
@@ -240,6 +245,7 @@ ready(function () {
             swal('Error', error, 'error');
             progressSigningContainer.style.display = 'none';
             selectCertificateContainer.style.display = '';
+            return;
         }
 
         if (signResponse.requestId !== requestId) {
@@ -289,6 +295,8 @@ ready(function () {
         request.open('POST', apiUrl + '/api/v1/signers/signrequests/confirm/json', true);
         request.setRequestHeader('Authorization', 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('activationPin').value));
         request.setRequestHeader('Content-Type', 'application/json');
+
+        document.getElementById('smsConfirmation').style.display = 'none';
         try {
             await asyncSendRequest(request, JSON.stringify({
                 language: 'EN',
@@ -309,13 +317,15 @@ ready(function () {
         request.setRequestHeader('Authorization', 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('activationPin').value));
         request.setRequestHeader('Content-Type', 'application/json');
 
+        document.getElementById('smsConfirmation').style.display = 'none';
         try {
             await asyncSendRequest(request, JSON.stringify({
                 language: 'EN',
                 requestId: requestId
             }));
         } catch (error) {
-            swal('Error', error, 'error');
+            // the error will be handled by the /sign response
+            //swal('Error', error, 'error');
         }
     });
 });
