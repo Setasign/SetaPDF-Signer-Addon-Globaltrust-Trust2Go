@@ -82,4 +82,4 @@ This package is open-sourced software licensed under the [MIT license](https://o
 
 ## TODOs
 
-- PSS padding is not implemented yet.
+- Signatures with PSS padding are not implemented yet.
