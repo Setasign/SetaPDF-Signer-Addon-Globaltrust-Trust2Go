@@ -37,10 +37,7 @@ switch ($action) {
         if (!isset($data['extraCertificates'])) {
             throw new Exception('Missing extra certificates');
         }
-        $extraCerts = new SetaPDF_Signer_X509_Collection();
-        foreach ($data['extraCertificates'] as $extraCertificate) {
-            $extraCerts->add(new SetaPDF_Signer_X509_Certificate($extraCertificate));
-        }
+        $extraCerts = new SetaPDF_Signer_X509_Collection($data['extraCertificates']);
 
         if (isset($_SESSION['tmpDocument'])) {
             @unlink($_SESSION['tmpDocument']->getWriter()->getPath());
