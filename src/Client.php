@@ -87,7 +87,7 @@ class Client
                 . '&useronly=' . ($useronly ? 'true' : 'false')
             )
             ->withHeader('Accept', 'application/json')
-            ->withHeader('Authorization', 'Basic ' . base64_encode($this->username . ':' . $this->transportPin))
+            ->withHeader('Authorization', 'Basic ' . \base64_encode($this->username . ':' . $this->transportPin))
         );
         $responseBody = $response->getBody()->getContents();
         if ($response->getStatusCode() !== 200) {
@@ -97,7 +97,7 @@ class Client
                 $responseBody
             ));
         }
-        return json_decode($responseBody, true);
+        return \json_decode($responseBody, true);
     }
 
     /**
@@ -112,7 +112,7 @@ class Client
         // search for the correct certificate chain
         $certificateChain = \array_filter(
             $certificates,
-            function ($certificateChain) use ($certificateSerialNumber) {
+            static function ($certificateChain) use ($certificateSerialNumber) {
                 foreach ($certificateChain as $certificate) {
                     if ($certificate['certificateSerialNumber'] === $certificateSerialNumber) {
                         return true;
@@ -130,17 +130,17 @@ class Client
 
         $mainCertificate = \array_filter(
             $certificateChain,
-            function ($certificate) use ($certificateSerialNumber) {
+            static function ($certificate) use ($certificateSerialNumber) {
                 return $certificate['certificateSerialNumber'] === $certificateSerialNumber;
             }
         )[0] ?? null;
 
-        $extraCertificates = \array_filter($certificateChain, function ($certificate) {
+        $extraCertificates = \array_filter($certificateChain, static function ($certificate) {
             return $certificate['level'] !== 'USER';
         });
         return [
             'certificate' => $mainCertificate['certificateString'],
-            'chain' => \array_map(function ($certificate) {
+            'chain' => \array_map(static function ($certificate) {
                 return $certificate['certificateString'];
             }, $extraCertificates),
         ];
@@ -164,10 +164,10 @@ class Client
         // todo multiple hashes
         $response = $this->httpClient->sendRequest(
             $this->requestFactory->createRequest('POST', $this->apiUrl . '/api/v1/signers/usernames/sign')
-            ->withHeader('Authorization', 'Basic ' . base64_encode($this->username . ':' . $this->transportPin))
+            ->withHeader('Authorization', 'Basic ' . \base64_encode($this->username . ':' . $this->transportPin))
             ->withHeader('Accept', 'application/json')
             ->withHeader('Content-Type', 'application/json')
-            ->withBody($this->streamFactory->createStream(json_encode([
+            ->withBody($this->streamFactory->createStream(\json_encode([
                 'language' => $this->language,
                 'requestId' => $requestId,
                 "certificateSerialNumber" => $certificateSerialNumber,
@@ -185,12 +185,12 @@ class Client
             ));
         }
 
-        $content = json_decode($responseBody, true);
+        $content = \json_decode($responseBody, true);
         if ($content['signedHashes'][0]['hash'] !== $hash) {
             throw new Exception('Hash mismatch');
         }
 
-        return base64_decode($content['signedHashes'][0]['signedHash']);
+        return \base64_decode($content['signedHashes'][0]['signedHash']);
     }
 
     /**
@@ -205,10 +205,10 @@ class Client
     {
         $response = $this->httpClient->sendRequest(
             $this->requestFactory->createRequest('POST', $this->apiUrl . '/api/v1/signers/signrequests/confirm/json')
-            ->withHeader('Authorization', 'Basic ' . base64_encode($this->username . ':' . $this->transportPin))
+            ->withHeader('Authorization', 'Basic ' . \base64_encode($this->username . ':' . $this->transportPin))
             ->withHeader('Accept', 'application/json')
             ->withHeader('Content-Type', 'application/json')
-            ->withBody($this->streamFactory->createStream(json_encode([
+            ->withBody($this->streamFactory->createStream(\json_encode([
                 'language' => $this->language,
                 'requestId' => $requestId,
                 'tan' => $tan,
@@ -223,7 +223,7 @@ class Client
             ));
         }
 
-        return json_decode($responseBody, true);
+        return \json_decode($responseBody, true);
     }
 
     /**
@@ -237,10 +237,10 @@ class Client
     {
         $response = $this->httpClient->sendRequest(
             $this->requestFactory->createRequest('POST', $this->apiUrl . '/api/v1/signers/signrequests/cancel/json')
-            ->withHeader('Authorization', 'Basic ' . base64_encode($this->username . ':' . $this->transportPin))
+            ->withHeader('Authorization', 'Basic ' . \base64_encode($this->username . ':' . $this->transportPin))
             ->withHeader('Accept', 'application/json')
             ->withHeader('Content-Type', 'application/json')
-            ->withBody($this->streamFactory->createStream(json_encode([
+            ->withBody($this->streamFactory->createStream(\json_encode([
                 'language' => $this->language,
                 'requestId' => $requestId,
             ])))
@@ -254,6 +254,6 @@ class Client
             ));
         }
 
-        return json_decode($responseBody, true);
+        return \json_decode($responseBody, true);
     }
 }
