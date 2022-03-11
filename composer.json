@@ -14,7 +14,7 @@
         "ext-openssl": "*",
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.0",
-        "setasign/setapdf-signer": "^2.38"
+        "setasign/setapdf-signer_eval_ioncube_php7.1": "^2.38.3.1671"
     },
     "require-dev": {
         "guzzlehttp/guzzle": "^6.5",
