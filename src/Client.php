@@ -110,7 +110,7 @@ class Client
     {
         $certificates = $this->getCertificates();
         // search for the correct certificate chain
-        $certificateChain = \array_filter(
+        $certificateChain = \current(\array_filter(
             $certificates,
             static function ($certificateChain) use ($certificateSerialNumber) {
                 foreach ($certificateChain as $certificate) {
@@ -120,20 +120,20 @@ class Client
                 }
                 return false;
             }
-        )[0] ?? null;
-        if ($certificateChain === null) {
+        ));
+        if ($certificateChain === false) {
             throw new Exception(\sprintf(
                 'Certificate with serial number "%s" not found.',
                 $certificateSerialNumber
             ));
         }
 
-        $mainCertificate = \array_filter(
+        $mainCertificate = \current(\array_filter(
             $certificateChain,
             static function ($certificate) use ($certificateSerialNumber) {
                 return $certificate['certificateSerialNumber'] === $certificateSerialNumber;
             }
-        )[0] ?? null;
+        ));
 
         $extraCertificates = \array_filter($certificateChain, static function ($certificate) {
             return $certificate['level'] !== 'USER';
