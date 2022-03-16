@@ -49,7 +49,7 @@ $client = new Client(
     $settings['username'],
     $settings['activationPin']
 );
-// These information should be cached
+// This information should be cached
 $certificates = $client->getCertificatesBySerialNumber($certificateSerialNumber);
 $certificate = new SetaPDF_Signer_X509_Certificate($certificates['certificate']);
 
