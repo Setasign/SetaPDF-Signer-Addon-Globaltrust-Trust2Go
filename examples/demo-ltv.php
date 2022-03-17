@@ -89,7 +89,6 @@ $document = \SetaPDF_Core_Document::loadByFilename($tmpWriter->getPath(), $write
 
 // Create a collection of trusted certificats:
 $trustedCertificates = new SetaPDF_Signer_X509_Collection($certificates['chain']);
-// This is the root certificate for the SubCA of the timestamping service
 $trustedCertificates->add(SetaPDF_Signer_Pem::extractFromFile($caBundle));
 
 // Create a collector instance
