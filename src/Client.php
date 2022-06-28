@@ -102,11 +102,23 @@ class Client
 
     /**
      * @param string $certificateSerialNumber
+     * @return array
+     * @throws ClientExceptionInterface
+     * @deprecated Use getCertificateBySerialNumber() instead.
+     * @see getCertificateBySerialNumber()
+     */
+    public function getCertificatesBySerialNumber(string $certificateSerialNumber): array
+    {
+        return $this->getCertificateBySerialNumber($certificateSerialNumber);
+    }
+
+    /**
+     * @param string $certificateSerialNumber
      * @return array{certificate: string, chain: array<string>}
      * @throws ClientExceptionInterface
      * @throws Exception
      */
-    public function getCertificatesBySerialNumber(string $certificateSerialNumber): array
+    public function getCertificateBySerialNumber(string $certificateSerialNumber): array
     {
         $certificates = $this->getCertificates();
         // search for the correct certificate chain
