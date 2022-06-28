@@ -86,6 +86,14 @@ class Module implements
     }
 
     /**
+     * @return SetaPDF_Signer_X509_Certificate|string
+     */
+    public function getCertificate()
+    {
+        return $this->padesModule->getCertificate();
+    }
+
+    /**
      * Add additional certificates which are placed into the CMS structure.
      *
      * @param array|SetaPDF_Signer_X509_Collection $extraCertificates PEM encoded certificates or pathes to PEM encoded
@@ -128,10 +136,10 @@ class Module implements
      */
     public function createSignature(SetaPDF_Core_Reader_FilePath $tmpPath): string
     {
-        if ($this->padesModule->getCertificate() === null) {
-            $certificates = $this->client->getCertificatesBySerialNumber($this->certificateSerialNumber);
-            $this->padesModule->setCertificate($certificates['certificate']);
-            $this->padesModule->setExtraCertificates($certificates['chain']);
+        if ($this->getCertificate() === null) {
+            $certificate = $this->client->getCertificateBySerialNumber($this->certificateSerialNumber);
+            $this->setCertificate($certificate['certificate']);
+            $this->setExtraCertificates($certificate['chain']);
         }
 
         $digest = $this->padesModule->getDigest();

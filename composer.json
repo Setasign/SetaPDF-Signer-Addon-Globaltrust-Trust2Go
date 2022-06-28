@@ -1,5 +1,6 @@
 {
     "name": "setasign/setapdf-signer-addon-globaltrust-trust2go",
+    "description": "A signature add-on for the SetaPDF-Signer component for TRUST2GO by GLOBALTRUST",
     "minimum-stability": "stable",
     "license": "MIT",
     "authors": [
