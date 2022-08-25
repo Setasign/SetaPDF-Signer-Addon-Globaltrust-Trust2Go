@@ -4,6 +4,10 @@
         <title>TRUST2GO SetaPDF Example</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
         <script src="https://cdn.jsdelivr.net/npm/sweetalert@2.1.2/dist/sweetalert.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@peculiar/x509@1.8.2/build/x509.js"
+                integrity="sha256-+sEKNP0oHYX9Hl7qdqr6gbLy1KKQITFG4PA6SqNJ4fg="
+                crossorigin="anonymous"
+        ></script>
     </head>
     <body style="padding: 20px;">
         <div style="max-width: 1400px; margin: auto;">
@@ -129,7 +133,7 @@ ready(function () {
         loginContainer.style.display = 'none';
         progressContainer.style.display = '';
 
-        var request = new XMLHttpRequest();
+        let request = new XMLHttpRequest();
         request.open('GET', apiUrl + '/api/v1/signers/usernames/certificates?language=EN&activeonly=true', true);
         request.setRequestHeader('Authorization', 'Basic ' + btoa(document.getElementById('username').value + ':' + document.getElementById('activationPin').value));
         try {
@@ -148,7 +152,18 @@ ready(function () {
                     return;
                 }
 
-                certificatesHtml += '<option value="' + certificate.certificateSerialNumber + '">' + certificate.description + '</option>';
+                const cert = new x509.X509Certificate(certificate.certificateString);
+                let commonName = '';
+                for (let subjectEntry of cert.subjectName.toJSON()) {
+                    if (!subjectEntry.CN) {
+                        continue;
+                    }
+                    commonName = subjectEntry.CN;
+                    break;
+                }
+
+                // alternatively you could use cert.subject or certificate.description (may be empty)
+                certificatesHtml += '<option value="' + certificate.certificateSerialNumber + '">' + commonName + '</option>';
             });
         });
         certificateSelect.innerHTML = certificatesHtml;
