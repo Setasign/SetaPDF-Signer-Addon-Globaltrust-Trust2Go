@@ -2,7 +2,6 @@ composer.phar
 /vendor/
 /examples/settings.php
 /examples/*.pdf
-/examples/output/*.pdf
 /.idea/
 auth.json
 
