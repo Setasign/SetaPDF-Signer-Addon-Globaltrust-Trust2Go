@@ -10,12 +10,13 @@
         }
     ],
     "require": {
-        "php": ">=7.1",
+        "php": ">=8.0",
         "ext-json": "*",
         "ext-openssl": "*",
+        "ext-curl": "*",
         "psr/http-client": "^1.0",
         "psr/http-factory": "^1.0",
-        "setasign/setapdf-signer": "^2.38"
+        "setasign/setapdf-signer": "^2.40.3"
     },
     "require-dev": {
         "guzzlehttp/guzzle": "^6.5",
