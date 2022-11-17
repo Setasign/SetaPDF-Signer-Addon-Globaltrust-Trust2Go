@@ -8,7 +8,7 @@ ini_set('display_errors', '1');
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-$file = __DIR__ . '/../files/Laboratory-Report.pdf';
+$file = __DIR__ . '/../assets/camtown/Laboratory-Report.pdf';
 
 session_start();
 
