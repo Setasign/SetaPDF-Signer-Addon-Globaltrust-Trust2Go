@@ -6,7 +6,7 @@ for the signature process of PDF documents. A big advantage of this module is, t
 shall be signed by TRUST2GO and not the complete PDF document. The returned signature will be placed in
 the PDF document by the SetaPDF-Signer Component.
 
-The implementation is based on the [TRUST2GO API 0.9.27](https://t2gtest.globaltrust.eu/trust2go/swagger-ui/index.html).
+The implementation is based on the [TRUST2GO API 0.9.27](https://t2g.globaltrust.eu/trust2go/swagger-ui/index.html).
 
 ## Requirements
 To use this package you need credentials for TRUST2GO.
