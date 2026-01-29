@@ -6,13 +6,20 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Handler\CurlHandler;
 use Http\Factory\Guzzle\RequestFactory;
 use Http\Factory\Guzzle\StreamFactory;
-use Mjelamanov\GuzzlePsr18\Client as Psr18Wrapper;
 use setasign\SetaPDF\Signer\Module\GlobalTrustTrust2Go\Client;
 use setasign\SetaPDF\Signer\Module\GlobalTrustTrust2Go\Module;
-
-date_default_timezone_set('Europe/Berlin');
-error_reporting(E_ALL | E_STRICT);
-ini_set('display_errors', '1');
+use setasign\SetaPDF2\Core\Document;
+use setasign\SetaPDF2\Core\Reader\FileReader;
+use setasign\SetaPDF2\Core\Writer\FileWriter;
+use setasign\SetaPDF2\Core\Writer\TempFileWriter;
+use setasign\SetaPDF2\Signer\Digest;
+use setasign\SetaPDF2\Signer\DocumentSecurityStore;
+use setasign\SetaPDF2\Signer\PemHelper;
+use setasign\SetaPDF2\Signer\Signer;
+use setasign\SetaPDF2\Signer\Timestamp\Module\Rfc3161\Curl as CurlTsModule;
+use setasign\SetaPDF2\Signer\ValidationRelatedInfo\Collector;
+use setasign\SetaPDF2\Signer\X509\Certificate;
+use setasign\SetaPDF2\Signer\X509\Collection;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -32,47 +39,44 @@ $httpClient = new GuzzleClient([
     'handler' => new CurlHandler(),
     // note: guzzle requires this parameter to fully support PSR-18
     'http_errors' => false,
-    'verify' => $caBundle,
     // timeout by api after ~300 seconds
     'timeout' => 360,
 ]);
-// only required if you are using guzzle < 7
-$httpClient = new Psr18Wrapper($httpClient);
-$requestFactory = new RequestFactory();
-$streamFactory = new StreamFactory();
 
 $client = new Client(
     $httpClient,
-    $requestFactory,
-    $streamFactory,
+    new RequestFactory(),
+    new StreamFactory(),
     $settings['apiUrl'],
     $settings['username'],
     $settings['activationPin']
 );
 // This information should be cached
 $certificates = $client->getCertificateBySerialNumber($certificateSerialNumber);
-$certificate = new SetaPDF_Signer_X509_Certificate($certificates['certificate']);
+$certificate = new Certificate($certificates['certificate']);
 
 $module = new Module($client, $requestId, $certificateSerialNumber);
 $module->setCertificate($certificate);
 $module->setExtraCertificates($certificates['chain']);
-$module->setDigest(SetaPDF_Signer_Digest::SHA_512);
+$module->setDigest(Digest::SHA_512);
 
-$reader = new SetaPDF_Core_Reader_File($file);
-$writer = new SetaPDF_Core_Writer_File(__DIR__ . '/output/demo-ltv.pdf');
-$tmpWriter = new SetaPDF_Core_Writer_TempFile();
+$reader = new FileReader($file);
+$writer = new FileWriter(__DIR__ . '/output/demo-ltv.pdf');
+$tmpWriter = new TempFileWriter();
 // let's get the document
-$document = SetaPDF_Core_Document::load($reader, $tmpWriter);
+$document = Document::load($reader, $tmpWriter);
 
 // now let's create a signer instance
-$signer = new SetaPDF_Signer($document);
+$signer = new Signer($document);
 $signer->setAllowSignatureContentLengthChange(false);
 $signer->setSignatureContentLength(26000);
 
 if ($settings['tsUrl']) {
-    $tsModule = new SetaPDF_Signer_Timestamp_Module_Rfc3161_Curl($settings['tsUrl']);
+    $tsModule = new CurlTsModule($settings['tsUrl']);
     $tsModule->setCurlOption(CURLOPT_USERPWD, $settings['tsUsername'] . ':' . $settings['tsPassword']);
-    $tsModule->setCurlOption(CURLOPT_CAINFO, $caBundle);
+    if (isset($settings['tsCaBundle'])) {
+        $tsModule->setCurlOption(CURLOPT_CAINFO, $settings['tsCaBundle']);
+    }
     $signer->setTimestampModule($tsModule);
 }
 
@@ -85,14 +89,14 @@ $signer->setSignatureFieldName($fieldName);
 
 $signer->sign($module);
 
-$document = \SetaPDF_Core_Document::loadByFilename($tmpWriter->getPath(), $writer);
+$document = Document::loadByFilename($tmpWriter->getPath(), $writer);
 
 // Create a collection of trusted certificats:
-$trustedCertificates = new SetaPDF_Signer_X509_Collection($certificates['chain']);
-$trustedCertificates->add(SetaPDF_Signer_Pem::extractFromFile($caBundle));
+$trustedCertificates = new Collection($certificates['chain']);
+$trustedCertificates->add(PemHelper::extractFromFile($caBundle));
 
 // Create a collector instance
-$collector = new SetaPDF_Signer_ValidationRelatedInfo_Collector($trustedCertificates);
+$collector = new Collector($trustedCertificates);
 
 // Collect revocation information for this field
 $vriData = $collector->getByFieldName($document, $fieldName);
@@ -102,7 +106,7 @@ $vriData = $collector->getByFieldName($document, $fieldName);
 //    echo str_repeat(' ', $log->getDepth() * 4) . $log . "\n";
 //}
 
-$dss = new SetaPDF_Signer_DocumentSecurityStore($document);
+$dss = new DocumentSecurityStore($document);
 $dss->addValidationRelatedInfoByFieldName(
     $fieldName,
     $vriData->getCrls(),

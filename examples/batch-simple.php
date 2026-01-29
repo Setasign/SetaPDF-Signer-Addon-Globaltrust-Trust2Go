@@ -9,11 +9,9 @@ use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Handler\CurlHandler;
 use Http\Factory\Guzzle\RequestFactory;
 use Http\Factory\Guzzle\StreamFactory;
-use Mjelamanov\GuzzlePsr18\Client as Psr18Wrapper;
-
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
+use setasign\SetaPDF2\Core\Reader\FileReader;
+use setasign\SetaPDF2\Core\Reader\StringReader;
+use setasign\SetaPDF2\Signer\PemHelper;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -33,19 +31,14 @@ $httpClient = new GuzzleClient([
     'handler' => new CurlHandler(),
     // note: guzzle requires this parameter to fully support PSR-18
     'http_errors' => false,
-    'verify' => $caBundle,
     // timeout by api after ~300 seconds
     'timeout' => 360,
 ]);
-// only required if you are using guzzle < 7
-$httpClient = new Psr18Wrapper($httpClient);
-$requestFactory = new RequestFactory();
-$streamFactory = new StreamFactory();
 
 $client = new Client(
     $httpClient,
-    $requestFactory,
-    $streamFactory,
+    new RequestFactory(),
+    new StreamFactory(),
     $settings['apiUrl'],
     $settings['username'],
     $settings['activationPin']
@@ -53,16 +46,16 @@ $client = new Client(
 
 $batch = new Batch($client, $requestId, $certificateSerialNumber);
 $batch->getTrustedCertificates()
-    ->add(SetaPDF_Signer_Pem::extractFromFile($caBundle));
+    ->add(PemHelper::extractFromFile($caBundle));
 
 // create a re-usable array of filenames (in/out)
 $files = [
     [
-        'in' => new SetaPDF_Core_Reader_File('assets/tektown/Laboratory-Report.pdf'),
+        'in' => new FileReader('assets/tektown/Laboratory-Report.pdf'),
         'out' => 'output/tektown-signed.pdf'
     ],
     [
-        'in' => new SetaPDF_Core_Reader_String(file_get_contents('assets/lenstown/Laboratory-Report.pdf')),
+        'in' => new StringReader(\file_get_contents('assets/lenstown/Laboratory-Report.pdf')),
         'out' => 'output/lenstown-signed.pdf'
     ],
     [

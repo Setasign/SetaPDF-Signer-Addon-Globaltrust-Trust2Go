@@ -7,23 +7,21 @@ namespace setasign\SetaPDF\Signer\Module\GlobalTrustTrust2Go;
 use Exception;
 use InvalidArgumentException;
 use Psr\Http\Client\ClientExceptionInterface;
-use SetaPDF_Core_Document;
-use SetaPDF_Core_Reader_FilePath;
-use SetaPDF_Core_Type_Dictionary;
-use SetaPDF_Signer_Asn1_Element;
-use SetaPDF_Signer_Asn1_Exception;
-use SetaPDF_Signer_Digest;
-use SetaPDF_Signer_Exception;
-use SetaPDF_Signer_Signature_Module_Pades;
-use SetaPDF_Signer_X509_Certificate;
-use SetaPDF_Signer_X509_Collection;
+use setasign\SetaPDF2\Core\Reader\FilePath;
+use setasign\SetaPDF2\Signer\Asn1\Exception as Asn1Exception;
+use setasign\SetaPDF2\Signer\Digest;
+use setasign\SetaPDF2\Signer\Exception as SignerException;
+use setasign\SetaPDF2\Signer\Signature\Module\DictionaryInterface;
+use setasign\SetaPDF2\Signer\Signature\Module\DocumentInterface;
+use setasign\SetaPDF2\Signer\Signature\Module\ModuleInterface;
+use setasign\SetaPDF2\Signer\Signature\Module\PadesProxyTrait;
 
 class Module implements
-    \SetaPDF_Signer_Signature_Module_ModuleInterface,
-    \SetaPDF_Signer_Signature_DictionaryInterface,
-    \SetaPDF_Signer_Signature_DocumentInterface
+    ModuleInterface,
+    DictionaryInterface,
+    DocumentInterface
 {
-    use \SetaPDF_Signer_Signature_Module_PadesProxyTrait;
+    use PadesProxyTrait;
 
     protected Client $client;
     protected string $requestId;
@@ -46,9 +44,9 @@ class Module implements
         if (!\in_array(
             $digest,
             [
-                SetaPDF_Signer_Digest::SHA_256,
-                SetaPDF_Signer_Digest::SHA_384,
-                SetaPDF_Signer_Digest::SHA_512
+                Digest::SHA_256,
+                Digest::SHA_384,
+                Digest::SHA_512
             ],
             true
         )) {
@@ -58,14 +56,14 @@ class Module implements
     }
 
     /**
-     * @param SetaPDF_Core_Reader_FilePath $tmpPath
+     * @param FilePath $tmpPath
      * @return string
      * @throws ClientExceptionInterface
-     * @throws SetaPDF_Signer_Asn1_Exception
-     * @throws SetaPDF_Signer_Exception
+     * @throws Asn1Exception
+     * @throws SignerException
      * @throws Exception
      */
-    public function createSignature(SetaPDF_Core_Reader_FilePath $tmpPath): string
+    public function createSignature(FilePath $tmpPath): string
     {
         if ($this->getCertificate() === null) {
             $certificate = $this->client->getCertificateBySerialNumber($this->certificateSerialNumber);

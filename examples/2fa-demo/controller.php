@@ -2,6 +2,16 @@
 
 declare(strict_types=1);
 
+use setasign\SetaPDF2\Core\Document;
+use setasign\SetaPDF2\Core\Writer\FileWriter;
+use setasign\SetaPDF2\Core\Writer\StringWriter;
+use setasign\SetaPDF2\Core\Writer\TempFileWriter;
+use setasign\SetaPDF2\Signer\Signature\Module\Pades;
+use setasign\SetaPDF2\Signer\Signer;
+use setasign\SetaPDF2\Signer\X509\Certificate;
+use setasign\SetaPDF2\Signer\X509\Collection;
+use setasign\SetaPDF2\Signer\X509\Format;
+
 date_default_timezone_set('Europe/Berlin');
 error_reporting(E_ALL | E_STRICT);
 ini_set('display_errors', '1');
@@ -32,23 +42,23 @@ switch ($action) {
         if (!isset($data['certificate'])) {
             throw new Exception('Missing certificate');
         }
-        $certificate = new SetaPDF_Signer_X509_Certificate($data['certificate']);
+        $certificate = new Certificate($data['certificate']);
 
         if (!isset($data['extraCertificates'])) {
             throw new Exception('Missing extra certificates');
         }
-        $extraCerts = new SetaPDF_Signer_X509_Collection($data['extraCertificates']);
+        $extraCerts = new Collection($data['extraCertificates']);
 
         if (isset($_SESSION['tmpDocument'])) {
             @unlink($_SESSION['tmpDocument']->getWriter()->getPath());
         }
 
         // load the PDF document
-        $document = SetaPDF_Core_Document::loadByFilename($file);
+        $document = Document::loadByFilename($file);
         // create a signer instance
-        $signer = new SetaPDF_Signer($document);
+        $signer = new Signer($document);
         // create a module instance
-        $module = new SetaPDF_Signer_Signature_Module_Pades();
+        $module = new Pades();
 
         // pass the user certificate to the module
         $module->setCertificate($certificate);
@@ -56,17 +66,17 @@ switch ($action) {
 
         $signatureContentLength = 10000;
         foreach ($extraCerts->getAll() as $extraCert) {
-            $signatureContentLength += (strlen($extraCert->get(SetaPDF_Signer_X509_Format::DER)) * 2);
+            $signatureContentLength += (strlen($extraCert->get(Format::DER)) * 2);
         }
 
         $signer->setSignatureContentLength($signatureContentLength);
 
         // you may use an own temporary file handler
-        $tempPath = SetaPDF_Core_Writer_TempFile::createTempPath();
+        $tempPath = TempFileWriter::createTempPath();
 
         // prepare the PDF
         $_SESSION['tmpDocument'] = $signer->preSign(
-            new SetaPDF_Core_Writer_File($tempPath),
+            new FileWriter($tempPath),
             $module
         );
         $_SESSION['module'] = $module;
@@ -89,9 +99,9 @@ switch ($action) {
         $signature = base64_decode($data['signature']);
 
         // create the document instance
-        $writer = new SetaPDF_Core_Writer_String();
-        $document = SetaPDF_Core_Document::loadByFilename($file, $writer);
-        $signer = new SetaPDF_Signer($document);
+        $writer = new StringWriter();
+        $document = Document::loadByFilename($file, $writer);
+        $signer = new Signer($document);
 
         // pass the signature to the signature modul
         $_SESSION['module']->setSignatureValue($signature);

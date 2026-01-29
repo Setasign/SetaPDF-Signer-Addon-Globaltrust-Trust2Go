@@ -10,4 +10,5 @@ return [
     'tsUrl' => null, // e.g. 'https://timestamp.globaltrust.eu:13080',
     'tsUsername' => null, // 'your-timestamp-service-username',
     'tsPassword' => null, // 'your-timestamp-service-password'
+    'tsCaBundle' => null, // optional: a path to a CA bundle file which is passed to the CURLOPT_CAINFO option
 ];

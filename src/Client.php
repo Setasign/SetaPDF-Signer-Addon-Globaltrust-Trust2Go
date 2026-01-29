@@ -29,7 +29,6 @@ class Client
         string $transportPin,
         string $language = 'EN'
     ) {
-
         $this->httpClient = $httpClient;
         $this->requestFactory = $requestFactory;
         $this->streamFactory = $streamFactory;
