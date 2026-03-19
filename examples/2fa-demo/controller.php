@@ -13,7 +13,7 @@ use setasign\SetaPDF2\Signer\X509\Collection;
 use setasign\SetaPDF2\Signer\X509\Format;
 
 date_default_timezone_set('Europe/Berlin');
-error_reporting(E_ALL | E_STRICT);
+error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
 require_once __DIR__ . '/../../vendor/autoload.php';
